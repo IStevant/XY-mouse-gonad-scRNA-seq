@@ -9,7 +9,7 @@
 # devtools::install_github("cole-trapnell-lab/monocle-release@monocle2")
 # biocLite(c("DDRTree", "pheatmap"))
 
-library(monocle)
+library("monocle")
 
 ###########################################
 #                                         #
@@ -64,12 +64,48 @@ maleCells <- detectGenes(maleCells, min_expr = 0.1)
 ordering_genes <- all_males_obj_j1_opt.sig.genes
 
 maleCells <- setOrderingFilter(maleCells, ordering_genes)
-plot_ordering_genes(maleCells)
+
 maleCells <- reduceDimension(maleCells, max_components=4)
-maleCells <- reduceDimension(maleCells, reduction_method="ICA")
+maleCells <- orderCells(maleCells, reverse=FALSE)
+plot_cell_trajectory(maleCells, color_by="stages")
+plot_cell_trajectory(maleCells, color_by="cellType")
+
+
+plot_cell_trajectory(maleCells, color_by="State")
+maleCells <- orderCells(maleCells, root_state=6)
+plot_cell_trajectory(maleCells, color_by="Pseudotime")
+
+
+maleCells_expressed_genes <-  row.names(subset(fData(maleCells), num_cells_expressed >= 3))
+maleCells_filtered <- maleCells[maleCells_expressed_genes,]
+my_genes <- row.names(subset(fData(maleCells_filtered), genes %in% c("Wt1", "Pdgfra", "Trim71")))
+cds_subset <- maleCells_filtered[my_genes,]
+plot_genes_in_pseudotime(cds_subset, color_by="stages")
+
+
+testis_genes <- row.names(subset(fData(maleCells), genes %in% c("Pdgfra", "Sox9", "Wnt5a", "Wt1", "Mro", "Dmrt1", "Foxp1", "Gadd45g")))
+
+plot_genes_branched_pseudotime(maleCells[testis_genes,],
+branch_point=2,
+color_by="cellType",
+ncol=2)
+
+
+BEAM_res <- BEAM(maleCells, branch_point=2, cores = 3)
+BEAM_res <- BEAM_res[order(BEAM_res$qval),]
+BEAM_res <- BEAM_res[,c("gene_short_name", "pval", "qval")]
+
+diff_test_res <- differentialGeneTest(maleCells[expressed_genes,],fullModelFormulaStr="~stages")
+ordering_genes <- row.names (subset(diff_test_res, qval < 0.01))
+
+
+maleCells <- setOrderingFilter(maleCells, ordering_genes)
+estimateDispersions(maleCells)
+plot_ordering_genes(maleCells)
+
+maleCells <- reduceDimension(maleCells, max_components=2)
 
 maleCells <- orderCells(maleCells, reverse=FALSE)
 
 plot_cell_trajectory(maleCells, color_by="stages")
-plot_cell_trajectory(maleCells, color_by="cellType")
 
