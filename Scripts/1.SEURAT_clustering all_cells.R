@@ -9,7 +9,7 @@ library("taRifx")
 # load Seurat
 library("Seurat")
 # load viridis color palette
-library(viridis)
+library("viridis")
 
 # modified SEURAT functions to fix bugs and add features
 source("1.BUGFIX_SEURAT_for_clustering all_cells.R")
@@ -44,7 +44,7 @@ all_males_obj=setup(all_males_obj,project="all_males",min.cells = 3,names.field 
 all_males_obj=mean.var.plot(all_males_obj,y.cutoff=2,x.low.cutoff=2,fxn.x = expMean,fxn.y = logVarDivMean)
 
 # Run pca on this subset of genes
-all_males_obj=pca(all_males_obj,do.print=TRUE)
+all_males_obj=pca(all_males_obj,do.print=FALSE)
 
 # Evaluate which PCs contain informative genes
 all_males_obj_j1=jackStraw(all_males_obj,num.replicate = 1000,do.print = FALSE)

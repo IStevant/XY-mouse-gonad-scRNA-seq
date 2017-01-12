@@ -60,7 +60,7 @@ maleCells <- detectGenes(maleCells, min_expr = 0.1)
 # Unsupervised Ordering
 #######################################
 
-# Use genes from SEURAT to performe cell ordering
+# Use genes from SEURAT to performe cell ordering (cf script 1.SEURAT_clustering all_cells.R)
 ordering_genes <- all_males_obj_j1_opt.sig.genes
 
 maleCells <- setOrderingFilter(maleCells, ordering_genes)
