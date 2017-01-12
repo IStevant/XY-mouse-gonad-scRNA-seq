@@ -70,7 +70,6 @@ maleCells <- reduceDimension(maleCells, reduction_method="ICA")
 
 maleCells <- orderCells(maleCells, reverse=FALSE)
 
-pdf("monocle2_trajectory_pseudotime_ICA_Monocle_genes.pdf")
 plot_cell_trajectory(maleCells, color_by="stages")
 plot_cell_trajectory(maleCells, color_by="cellType")
-dev.off()
+
