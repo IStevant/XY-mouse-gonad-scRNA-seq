@@ -65,10 +65,6 @@ length(all_males_obj_j1_opt.sig.genes)
 # Run PCA on these 1361 genes
 all_males_obj_j1_opt=pca(all_males_obj_j1_opt,pc.genes=all_males_obj_j1_opt.sig.genes,do.print = FALSE)
 
-# Run Jackstraw again to choose the PCs for t-SNE
-all_males_obj_j2=jackStraw(all_males_obj_j1_opt,num.replicate = 400,do.print = FALSE)
-jackStrawPlot(all_males_obj_j2,PCs = 1:20)
-
 # t-SNE on the 6 first PCs, with 100K iteration (takes hours to compute)
 all_males_obj_j2_tsne=run_tsne(all_males_obj_j2,dims.use = c(1:6), max_iter=100000)
 
@@ -77,7 +73,13 @@ tsne.plot(all_males_obj_j2_tsne,pt.size = 4)
 
 # Save/Load object to analyse later
 save(all_males_obj_j2_tsne,file="../Data/male_tsne_100000_iter_1-4_600_1-6.Robj")
-load(file="../Data/male_tsne_100000_iter_1-4_600_1-6.Robj")
+load(file="~/male_tsne_100000_iter_1-4_600_1-6.Robj")
+
+
+
+all_males_obj_j2_tsne=run_tsne(all_males_obj_j2_tsne,dims.use = c(1:11), do.fast=TRUE)
+tsne.plot(all_males_obj_j2_tsne,pt.size = 4)
+
 
 # Define cell clusters with DBscan using 11 as epsilon neighborhood
 all_males_obj_j2_tsne_cl=DBclust_dimension(all_males_obj_j2_tsne,1,2,reduction.use = "tsne",G.use = 11,set.ident = TRUE)
@@ -144,9 +146,9 @@ males_data <- doHeatMap_2(all_males_obj_j2_tree,genes.use = marker_genes,slim.co
 tsne_gene_exp <- function(tsne_result,gene){
 
 	p <- ggplot(tsne_result, aes(tSNE_1,tSNE_2)) +
-	geom_point(shape = 21, stroke=0.5, aes(fill=as.numeric(males[gene,])), size = 3) +
-	scale_fill_gradient2(high="darkred", low="white", name="")+
-	# theme_bw() +
+	geom_point(shape = 21, stroke=0.5, aes(fill=as.numeric(log(males[gene,]+1))), size = 3) +
+	scale_fill_viridis(name="")+
+	theme_bw() +
 	ggtitle(gene) +
 	theme(
 		plot.title = element_text(size=18, face="bold.italic"),
@@ -159,6 +161,86 @@ tsne_gene_exp <- function(tsne_result,gene){
 
 }
 
-seurat_tsne <- all_males_obj_j2_tsne_cl@tsne.rot
+seurat_tsne <- all_males_obj_j2_tsne@tsne.rot
 
 tsne_gene_exp(seurat_tsne,"Trim71")
+tsne_gene_exp(seurat_tsne,"Wnt5a")
+tsne_gene_exp(seurat_tsne,"Aard")
+tsne_gene_exp(seurat_tsne,"Insl3")
+
+
+###########################################
+#                                         #
+#      Plot individual genes (violin)     #
+#                                         #
+###########################################
+
+
+plot_gene_violin <- function(data, title) {
+	mean_exp <- data
+	clusters <- substr(names(data),14,18)
+	plot_mean <- data.frame(
+			t(mean_exp),
+			clusters=clusters
+		)
+	colnames(plot_mean) <- c("expr", "clusters")
+	g <- ggplot(plot_mean, aes(clusters, expr)) +
+	geom_violin(aes(fill=factor(clusters)), adjust = .6, scale = "width") + 
+	geom_jitter(height = 0, size=0.5) +
+	# geom_dotplot(binaxis='stages', stackdir='center')+
+	stat_smooth(aes(x = clusters, y = as.numeric(as.character(expr)), group=1), method="loess", colour="black", se=FALSE) + 
+	theme_bw() +
+	xlab("Cells") +
+	ylab("Expression (log(RPKM+1))") +
+	ggtitle(title) +
+	scale_colour_manual(
+	values="black"
+	) +
+	scale_fill_manual(
+	values=stagePalette,
+	name=""
+	) +
+	theme(
+	axis.text=element_text(size=18),
+	axis.title=element_text(size=18),
+	legend.text = element_text(size =18),
+	legend.title = element_text(size =18 ,face="bold"),
+	plot.title = element_text(size=18, face="bold.italic")
+	)
+	print(g)
+}
+
+
+graph_violin(c(
+	"Insl3"
+	)
+)
+
+
+
+males_stages <- as.vector(substr(all_males_obj_j2_tsne@ident,1,5))
+stagePalette <- c("#2c7bb6", "#abd9e9", "#ffffbf", "#fdae61", "#d7191c")
+# stagePalette <- c("#abd9e9", "#ffffbf", "#fdae61", "#d7191c")
+
+
+graph_violin <- function(genes){
+	for (gene in genes){
+		print(gene)
+		subset_genes <- males[gene,]
+		plot_gene_violin(subset_genes, gene)
+	}
+}
+
+
+pdf("marker_genes_per_stage.pdf", width=7, height=4)
+graph_violin(c(
+	"Sox9",
+	"Nr2f1",
+	"Wt1",
+	"Sry",
+	"Amh",
+	"Insl3",
+	"Cyp11a1"
+	)
+)
+dev.off()

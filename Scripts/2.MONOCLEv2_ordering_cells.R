@@ -18,6 +18,7 @@ library("monocle")
 ###########################################
 
 load(file="../Data/XY_single-cell_RPKM_table.Robj")
+load(file="~/male_tsne_100000_iter_1-4_600_1-6.Robj")
 
 
 ###########################################
@@ -62,17 +63,14 @@ maleCells <- detectGenes(maleCells, min_expr = 0.1)
 
 # Use genes from SEURAT to performe cell ordering (cf script 1.SEURAT_clustering all_cells.R)
 ordering_genes <- all_males_obj_j1_opt.sig.genes
-
 maleCells <- setOrderingFilter(maleCells, ordering_genes)
-
 maleCells <- reduceDimension(maleCells, max_components=4)
-maleCells <- orderCells(maleCells, reverse=FALSE)
-plot_cell_trajectory(maleCells, color_by="stages")
 plot_cell_trajectory(maleCells, color_by="cellType")
 
+maleCells <- orderCells(maleCells, reverse=FALSE)
 
 plot_cell_trajectory(maleCells, color_by="State")
-maleCells <- orderCells(maleCells, root_state=6)
+maleCells <- orderCells(maleCells, root_state=5)
 plot_cell_trajectory(maleCells, color_by="Pseudotime")
 
 
@@ -91,9 +89,9 @@ color_by="cellType",
 ncol=2)
 
 
-BEAM_res <- BEAM(maleCells, branch_point=2, cores = 3)
+BEAM_res <- BEAM(maleCells_filtered, branch_point=2, cores = 1)
 BEAM_res <- BEAM_res[order(BEAM_res$qval),]
-BEAM_res <- BEAM_res[,c("gene_short_name", "pval", "qval")]
+BEAM_res <- BEAM_res[,c("genes", "pval", "qval")]
 
 plot_genes_branched_heatmap(maleCells[row.names(subset(BEAM_res, qval < 1e-4)),],
 branch_point = 1,
@@ -101,3 +99,4 @@ num_clusters = 4,
 cores = 1,
 use_gene_short_name = T,
 show_rownames = T)
+

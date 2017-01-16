@@ -4,6 +4,8 @@
 #                                         #
 ###########################################
 
+library("data.table") 
+library("ggplot2") 
 
 ###########################################
 #                                         #
@@ -60,77 +62,97 @@ sig.FDR.adjusted.pvals <- FDR.adjusted.pvals[FDR.adjusted.pvals$adj.pval<0.05,]
 
 ###########################################
 #                                         #
-#       Plot mean exp genes per cell      #
+#       Plot mean exp genes per stage     #
 #                                         #
 ###########################################
+
+A <- setDT(df[df$factor == "a", ])[, mean(value)]
+
+
+mean_exp <- as.numeric(as.character(rowMeans(cluster2_expr)))
+stages <- substr(colnames(cluster2_expr),14,18)
+
+plot_mean <- as.data.frame(
+	cbind(
+		mean=mean_exp,
+		stages=as.factor(stages)
+		)
+	)
+
+ggplot(plot_mean, aes(stages, as.numeric(as.character(mean)))) +
+		# ggplot(plot_mean, aes(as.numeric(cells), as.numeric(as.character(mean)))) +
+		# geom_point(shape=21, size=3.5, stroke=0.5, aes(fill=factor(stages))) + 
+		# geom_violin(aes(fill=factor(stages)), adjust = .6, scale = "width") + 
+		geom_jitter(aes(fill=factor(stages)),height = 0) +
+		stat_smooth(aes(x = stages, y = as.numeric(as.character(mean)), group=1), method="loess", colour="black") + 
+		theme_bw() +
+		xlab("Cells") +
+		ylab("mean expression (log(RPKM+1))") +
+		ggtitle(title) +
+		scale_colour_manual(
+		values="black"
+		) +
+		scale_fill_manual(
+		values=stagePalette,
+		name=""
+		) +
+		theme(
+			axis.text=element_text(size=18),
+			axis.title=element_text(size=18),
+			legend.text = element_text(size =18),
+			legend.title = element_text(size =18 ,face="bold"),
+			plot.title = element_text(size=18, face="bold")
+		)
+)
+
 
 
 plot_genes <- function(data, title) {
 	mean_exp <- as.numeric(as.character(rowMeans(data)))
 	stages <- substr(colnames(data),14,18)
+
 	plot_mean <- as.data.frame(
 		cbind(
-			cells=seq(colnames(data)),
 			mean=mean_exp,
-			stages=stages,
-			stages=substr(colnames(data),14,18)
+			stages=as.factor(stages)
 			)
 		)
 
-	plot_mean$cells <- factor(plot_mean$cells, levels = plot_mean$stages)
 
-	# print(colnames(data))
+
 
 	g <- ggplot(plot_mean, aes(stages, as.numeric(as.character(mean)))) +
-	# ggplot(plot_mean, aes(as.numeric(cells), as.numeric(as.character(mean)))) +
-	# geom_point(shape=21, size=3.5, stroke=0.5, aes(fill=factor(stages))) + 
-	geom_violin(aes(fill=factor(stages)), adjust = .6, scale = "width") + 
-	geom_jitter(height = 0, size=1) +
-	stat_smooth(aes(x = stages, y = as.numeric(as.character(mean)), group=1), method="loess", colour="black") + 
-	theme_bw() +
-	xlab("Cells") +
-	ylab("mean expression (log(RPKM+1))") +
-	ggtitle(title) +
-	scale_colour_manual(
-	values="black"
-	) +
-	scale_fill_manual(
-	values=stagePalette,
-	name=""
-	) +
-	theme(
-	axis.text=element_text(size=18),
-	axis.title=element_text(size=18),
-	legend.text = element_text(size =18),
-	legend.title = element_text(size =18 ,face="bold"),
-	plot.title = element_text(size=18, face="bold")
-	# legend.position="none"
-)
-
-	# stat_smooth() +
-	# geom_point(aes(colour = factor(stages))) +
-	# ylim(0,4.5)
-
-	# ggplot(plot_mean, aes(as.numeric(as.character(cells)), as.numeric(as.character(mean)))) +
-	# stat_smooth() +
-	# geom_point(aes(colour = factor(stages)))
-
+		# ggplot(plot_mean, aes(as.numeric(cells), as.numeric(as.character(mean)))) +
+		# geom_point(shape=21, size=3.5, stroke=0.5, aes(fill=factor(stages))) + 
+		geom_violin(aes(fill=factor(stages)), adjust = .6, scale = "width") + 
+		geom_jitter(height = 0, size=1) +
+		stat_smooth(aes(x = stages, y = as.numeric(as.character(mean)), group=1), method="loess", colour="black") + 
+		theme_bw() +
+		xlab("Cells") +
+		ylab("mean expression (log(RPKM+1))") +
+		ggtitle(title) +
+		scale_colour_manual(
+		values="black"
+		) +
+		scale_fill_manual(
+		values=stagePalette,
+		name=""
+		) +
+		theme(
+			axis.text=element_text(size=18),
+			axis.title=element_text(size=18),
+			legend.text = element_text(size =18),
+			legend.title = element_text(size =18 ,face="bold"),
+			plot.title = element_text(size=18, face="bold")
+		)
+	)
 	print(g)
-
 }
 
 
 males_subset <- cluster2_expr[rownames(up_genes),]
 
 plot_genes(males_subset, "Significantly up-regulated genes (228 genes)")
-
-
-
-
-
-
-
-
 
 
 ###########################################
