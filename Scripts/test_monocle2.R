@@ -17,7 +17,7 @@ library("monocle")
 #                                         #
 ###########################################
 
-load(file="../Data/sample_test_monocle2.csv")
+dataset <- read.csv(file="../Data/sample_test_monocle2.csv", row.names=1,check.names=FALSE)
 
 ###########################################
 #                                         #
@@ -26,12 +26,12 @@ load(file="../Data/sample_test_monocle2.csv")
 ###########################################
 
 # Prepare tables for monocle object
-conds<- substr(colnames(males), 14,18)
-sampleCells_expr_matrix <- as.data.frame(males)
-sampleCells_sample_sheet <- data.frame(cells=names(males), stages=conds))
-rownames(sampleCells_sample_sheet)<- names(males)
-sampleCells_gene_annotation <- as.data.frame(rownames(males))
-rownames(sampleCells_gene_annotation)<- rownames(males)
+conds<- substr(colnames(dataset), 14,18)
+sampleCells_expr_matrix <- as.data.frame(dataset)
+sampleCells_sample_sheet <- data.frame(cells=names(dataset), stages=conds))
+rownames(sampleCells_sample_sheet)<- names(dataset)
+sampleCells_gene_annotation <- as.data.frame(rownames(dataset))
+rownames(sampleCells_gene_annotation)<- rownames(dataset)
 colnames(sampleCells_gene_annotation)<- "genes"
 pd <- new("AnnotatedDataFrame", data = sampleCells_sample_sheet)
 fd <- new("AnnotatedDataFrame", data = sampleCells_gene_annotation)
